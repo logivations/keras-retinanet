@@ -28,9 +28,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 voc_classes = {
-    'none': 0,
-    'box': 1
-   # 'box': 0
+    'box'   : 0
 }
 
 
@@ -56,6 +54,8 @@ class PascalVocGenerator(Generator):
         set_name,
         classes=voc_classes,
         image_extension='.jpg',
+        skip_truncated=False,
+        skip_difficult=False,
         **kwargs
     ):
         self.data_dir             = data_dir
@@ -63,6 +63,9 @@ class PascalVocGenerator(Generator):
         self.classes              = classes
         self.image_names          = [l.strip().split(None, 1)[0] for l in open(os.path.join(data_dir, 'ImageSets', set_name + '.txt')).readlines()]
         self.image_extension      = image_extension
+        self.skip_truncated       = skip_truncated
+        self.skip_difficult       = skip_difficult
+
         self.labels = {}
         for key, value in self.classes.items():
             self.labels[value] = key
@@ -98,7 +101,7 @@ class PascalVocGenerator(Generator):
         box = np.zeros((1, 5))
         box[0, 4] = self.name_to_label(class_name)
 
-        bndbox    = _findNode(element, 'bndbox')
+        bndbox = _findNode(element, 'bndbox')
         box[0, 0] = _findNode(bndbox, 'xmin', 'bndbox.xmin', parse=float) - 1
         box[0, 1] = _findNode(bndbox, 'ymin', 'bndbox.ymin', parse=float) - 1
         box[0, 2] = _findNode(bndbox, 'xmax', 'bndbox.xmax', parse=float) - 1
@@ -109,8 +112,8 @@ class PascalVocGenerator(Generator):
     def __parse_annotations(self, xml_root, img):
         try:
             size_node = _findNode(xml_root, 'size')
-            width     = _findNode(size_node, 'width',  'size.width',  parse=float)
-            height    = _findNode(size_node, 'height', 'size.height', parse=float)
+            width = _findNode(size_node, 'width', 'size.width', parse=float)
+            height = _findNode(size_node, 'height', 'size.height', parse=float)
         except ValueError:
             with Image.open(img) as img:
                 width, height = img.size
@@ -118,7 +121,7 @@ class PascalVocGenerator(Generator):
         boxes = np.zeros((0, 5))
         for i, element in enumerate(xml_root.iter('object')):
             try:
-               box = self.__parse_annotation(element)
+                box = self.__parse_annotation(element)
             except ValueError as e:
                 raise_from(ValueError('could not parse object #{}: {}'.format(i, e)), None)
             boxes = np.append(boxes, box, axis=0)

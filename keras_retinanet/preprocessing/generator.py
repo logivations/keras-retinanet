@@ -242,7 +242,5 @@ class Generator(object):
                 random.shuffle(self.groups)
             group = self.groups[self.group_index]
             self.group_index = (self.group_index + 1) % len(self.groups)
-        try:
-            return self.compute_input_output(group)
-        except:
-            pass
+
+        return self.compute_input_output(group)

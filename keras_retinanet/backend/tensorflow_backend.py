@@ -18,12 +18,30 @@ import tensorflow
 import keras
 
 
+def map_fn(*args, **kwargs):
+    return tensorflow.map_fn(*args, **kwargs)
+
+
+def pad(*args, **kwargs):
+    return tensorflow.pad(*args, **kwargs)
+
+
+def top_k(*args, **kwargs):
+    return tensorflow.nn.top_k(*args, **kwargs)
+
+
 def clip_by_value(*args, **kwargs):
     return tensorflow.clip_by_value(*args, **kwargs)
 
 
-def resize_images(*args, **kwargs):
-    return tensorflow.image.resize_images(*args, **kwargs)
+def resize_images(images, size, method='bilinear', align_corners=False):
+    methods = {
+        'bilinear': tensorflow.image.ResizeMethod.BILINEAR,
+        'nearest' : tensorflow.image.ResizeMethod.NEAREST_NEIGHBOR,
+        'bicubic' : tensorflow.image.ResizeMethod.BICUBIC,
+        'area'    : tensorflow.image.ResizeMethod.AREA,
+    }
+    return tensorflow.image.resize_images(images, size, methods[method], align_corners)
 
 
 def non_max_suppression(*args, **kwargs):

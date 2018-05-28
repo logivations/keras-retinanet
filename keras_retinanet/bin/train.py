@@ -363,9 +363,6 @@ def parse_args(args):
     parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
 
     return check_args(parser.parse_args(args))
-# from tensorflow.python.client import device_lib
-# print(device_lib.list_local_devices())
-# exit()
 
 def main(args=None):
     # parse arguments
@@ -397,11 +394,10 @@ def main(args=None):
         prediction_model = retinanet_bbox(model=model)
     else:
 
-        weights = 'snapshots/1/resnet50_pascal_30.h5'
-        # weights = args.weights
+        weights = args.weights
         # default to imagenet if nothing else is specified
-        # if weights is None and args.imagenet_weights:
-        #     weights = backbone.download_imagenet()
+        if weights is None and args.imagenet_weights:
+            weights = backbone.download_imagenet()
 
         print('Creating model, this may take a second...')
         model, training_model, prediction_model = create_models(
@@ -412,7 +408,6 @@ def main(args=None):
             freeze_backbone=args.freeze_backbone
         )
 
-    # print model summary
     print(model.summary())
 
     # this lets the generator compute backbone layer shapes using the actual backbone model

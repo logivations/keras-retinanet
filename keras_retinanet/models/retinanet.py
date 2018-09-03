@@ -303,6 +303,7 @@ def retinanet_bbox(
     anchor_parameters = AnchorParameters.default,
     nms               = False,
     name              = 'retinanet-bbox',
+    score_threshold   = 0.05,
     **kwargs
 ):
     """ Construct a RetinaNet model on top of a backbone and adds convenience functions to output boxes directly.
@@ -345,7 +346,7 @@ def retinanet_bbox(
     boxes = layers.ClipBoxes(name='clipped_boxes')([model.inputs[0], boxes])
 
     # filter detections (apply NMS / score threshold / select top-k)
-    detections = layers.FilterDetections(nms=nms, name='filtered_detections')([boxes, classification] + other)
+    detections = layers.FilterDetections(nms=nms, score_threshold=score_threshold, name='filtered_detections')([boxes, classification] + other)
 
     outputs = detections
 

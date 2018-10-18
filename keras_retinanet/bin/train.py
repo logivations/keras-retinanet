@@ -23,6 +23,7 @@ import sys
 import warnings
 
 import keras
+print keras.__version__
 import keras.preprocessing.image
 from keras.utils import multi_gpu_model
 import tensorflow as tf
@@ -87,7 +88,7 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
         training_model = model
 
     # make prediction model
-    prediction_model = retinanet_bbox(model=model)
+    prediction_model = retinanet_bbox(model=model, nms=True)
 
     # compile model
     training_model.compile(
@@ -95,7 +96,7 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
             'regression'    : losses.smooth_l1(),
             'classification': losses.focal()
         },
-        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
+        optimizer=keras.optimizers.adam(lr=1e-4, clipnorm=0.001)
     )
 
     return model, training_model, prediction_model

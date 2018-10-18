@@ -1,6 +1,6 @@
 import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+#os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import keras
 from keras_retinanet import models
 from keras_retinanet.utils.image import read_image_bgr, preprocess_image, resize_image
@@ -23,7 +23,7 @@ def get_session():
 
 keras.backend.tensorflow_backend.set_session(get_session())
 
-model_path = os.path.join('./snapshots', 'model.h5')
+model_path = os.path.join('./snapshots', 'resnet50_pascal_10.h5')
 
 # if the model is not converted to an inference model, use the line below
 model = models.load_model(model_path, backbone_name='resnet50', convert=True)
@@ -31,16 +31,16 @@ model = models.load_model(model_path, backbone_name='resnet50', convert=True)
 # load retinanet model
 # model = models.load_model(model_path, backbone_name='resnet50')
 
-folder_path = os.getcwd()
-labels_to_names = {0: 'box'}
+folder_path = ''#os.getcwd()
+labels_to_names = {0: 'head'}
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
-relative_path_to_imgs = '/path/to/JPEGImages/'
-relative_path_to_newimg = '/visual_results/some/folder/result_'
-os.mkdir('visual_results')
-for i in os.listdir(folder_path + relative_path_to_imgs):
-    save_name = os.getcwd() + relative_path_to_newimg + i.split('/')[-1]
-    image = read_image_bgr(folder_path + relative_path_to_imgs + i)
+relative_path_to_imgs = '/data/head-detection/HollywoodHeads/TestSet/'
+relative_path_to_newimg = '/data/head-detection/HollywoodHeads/TestResults'
+#os.mkdir('visual_results')
+for i in os.listdir(relative_path_to_imgs):
+    save_name = relative_path_to_newimg #i.split('/')[-1]
+    image = read_image_bgr(relative_path_to_imgs + i)
 
     draw = image.copy()
     draw = cv2.cvtColor(draw, cv2.COLOR_BGR2RGB)
@@ -58,11 +58,12 @@ for i in os.listdir(folder_path + relative_path_to_imgs):
     # visualize detections
     for box, score, label in zip(boxes[0], scores[0], labels[0]):
         # scores are sorted so we can break
-        if score < 0.98:
+        print score
+        if score < 0.05:
             break
         color = label_color(label)
         b = box.astype(int)
         draw_box(draw, b, color=color)
         caption = "{} {:.3f}".format(labels_to_names[label], score)
         draw_caption(draw, b, caption)
-    cv2.imwrite(save_name, draw[:, :, ::-1])
+    cv2.imwrite(save_name + i, draw[:, :, ::-1])

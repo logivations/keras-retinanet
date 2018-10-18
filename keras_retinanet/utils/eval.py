@@ -70,14 +70,17 @@ def _get_detections(generator, model, score_threshold=0.05, max_detections=100, 
     # Returns
         A list of lists containing the detections for each image in the generator.
     """
+    print('gen size : ',generator.size())
     all_detections = [[None for i in range(generator.num_classes())] for j in range(generator.size())]
-
     for i in range(generator.size()):
         raw_image    = generator.load_image(i)
         image        = generator.preprocess_image(raw_image.copy())
         image, scale = generator.resize_image(image)
+        #print(image.shape,scale)
 
         # run network
+        #print ((model.predict_on_batch(np.expand_dims(image,axis=0))))
+        #print(image.shape)
         boxes, scores, labels = model.predict_on_batch(np.expand_dims(image, axis=0))
 
         # correct boxes for image scale
@@ -112,6 +115,24 @@ def _get_detections(generator, model, score_threshold=0.05, max_detections=100, 
 
     return all_detections
 
+def _get_detections_directory(generator, model, score_threshold=0.05, max_detections=100, save_path=None):
+    folder_path = ''  # os.getcwd()
+    labels_to_names = {0: 'head'}
+    from tensorflow.python.client import device_lib
+    print(device_lib.list_local_devices())
+    relative_path_to_imgs = '/data/head-detection/HollywoodHeads/TestSet/'
+    for i in os.listdir(relative_path_to_imgs):
+        save_name = relative_path_to_newimg  # i.split('/')[-1]
+        image = read_image_bgr(relative_path_to_imgs + i)
+
+        draw = image.copy()
+        draw = cv2.cvtColor(draw, cv2.COLOR_BGR2RGB)
+
+        image = preprocess_image(image)
+        image, scale = resize_image(image)
+
+        start = time.time()
+        boxes, scores, labels = model.predict_on_batch(np.expand_dims(image, axis=0))
 
 def _get_annotations(generator):
     """ Get the ground truth annotations from the generator.

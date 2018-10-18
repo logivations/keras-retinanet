@@ -28,7 +28,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 voc_classes = {
-    'box'   : 0
+    'head'   : 0
 }
 
 
@@ -53,7 +53,7 @@ class PascalVocGenerator(Generator):
         data_dir,
         set_name,
         classes=voc_classes,
-        image_extension='.jpg',
+        image_extension='.jpeg',
         skip_truncated=False,
         skip_difficult=False,
         **kwargs
@@ -110,10 +110,13 @@ class PascalVocGenerator(Generator):
         return box
 
     def __parse_annotations(self, xml_root, img):
+
         try:
             size_node = _findNode(xml_root, 'size')
             width = _findNode(size_node, 'width', 'size.width', parse=float)
             height = _findNode(size_node, 'height', 'size.height', parse=float)
+            filename = _findNode(xml_root, 'filename')
+            #print(filename.text)
         except ValueError:
             with Image.open(img) as img:
                 width, height = img.size
@@ -123,8 +126,10 @@ class PascalVocGenerator(Generator):
             try:
                 box = self.__parse_annotation(element)
             except ValueError as e:
-                raise_from(ValueError('could not parse object #{}: {}'.format(i, e)), None)
-            boxes = np.append(boxes, box, axis=0)
+                print('could not parse object #{}: {}'.format(i, e))
+                #raise_from(ValueError('could not parse object #{}: {}'.format(i, e)), None)
+            else:
+                boxes = np.append(boxes, box, axis=0)
 
         return boxes
 

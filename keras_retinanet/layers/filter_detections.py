@@ -50,7 +50,7 @@ def filter_detections(boxes, classification, other=[], nms=False, score_threshol
         if nms:
             filtered_boxes  = backend.gather_nd(boxes, indices)
             filtered_scores = keras.backend.gather(scores, indices)[:, 0]
-
+            print('performing nms threshold',nms_threshold)
             # perform NMS
             nms_indices = backend.non_max_suppression(filtered_boxes, filtered_scores, max_output_size=max_detections, iou_threshold=nms_threshold)
 
@@ -97,8 +97,8 @@ def filter_detections(boxes, classification, other=[], nms=False, score_threshol
 class FilterDetections(keras.layers.Layer):
     def __init__(
         self,
-        nms                 = False,
-        nms_threshold       = 0.5,
+        nms                 = True,
+        nms_threshold       = 0.2,
         score_threshold     = 0.05,
         max_detections      = 300,
         parallel_iterations = 32,

@@ -25,8 +25,10 @@ from PIL import Image
 from .transform import change_transform_origin, transform_aabb
 
 
-def read_image_bgr(path, set_name='test'):
+def read_image_bgr(path, set_name='test',fx=1,fy=1):
+
     image = np.asarray(Image.open(path).convert('RGB'))
+    image = cv2.resize(image, None, fx=fx, fy=fy)
     if set_name == 'test':
         return image[:, :, ::-1].copy()
     else:

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import time
 
 from ..preprocessing.generator import Generator
 from ..utils.image import read_image_bgr
@@ -28,10 +29,17 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 voc_classes = {
-    'head'   : 0
+    'paperbags'   : 0,
+    'boxes'   : 1,
+    'plasticbags'   : 2,
+    'plastic-bags-bundle-10'   : 3
 }
 
+voc_classes = {
 
+    'paperbags'   : 0,
+    'boxes'   : 1
+}
 def _findNode(parent, name, debug_name = None, parse = None):
     if debug_name is None:
         debug_name = name
@@ -53,9 +61,12 @@ class PascalVocGenerator(Generator):
         data_dir,
         set_name,
         classes=voc_classes,
-        image_extension='.jpeg',
+        image_extension='.jpg',
         skip_truncated=False,
         skip_difficult=False,
+        use_cache=True,
+        scale_x=1,
+        scale_y=1,
         **kwargs
     ):
         self.data_dir             = data_dir
@@ -65,8 +76,12 @@ class PascalVocGenerator(Generator):
         self.image_extension      = image_extension
         self.skip_truncated       = skip_truncated
         self.skip_difficult       = skip_difficult
-
+        self.use_cache = use_cache
+        self.fx=scale_x
+        self.fy=scale_y
         self.labels = {}
+
+        self.img_cache = {}
         for key, value in self.classes.items():
             self.labels[value] = key
 
@@ -91,7 +106,13 @@ class PascalVocGenerator(Generator):
 
     def load_image(self, image_index):
         path = os.path.join(self.data_dir, 'JPEGImages', self.image_names[image_index] + self.image_extension)
-        return read_image_bgr(path, self.set_name)
+
+        if path not in self.img_cache and self.use_cache:
+            img = read_image_bgr(path, self.set_name,fx = self.fx, fy=self.fy)
+            self.img_cache[path] = img
+        else:
+            img = self.img_cache[path]
+        return img
 
     def __parse_annotation(self, element):
         class_name = _findNode(element, 'name').text
@@ -106,7 +127,10 @@ class PascalVocGenerator(Generator):
         box[0, 1] = _findNode(bndbox, 'ymin', 'bndbox.ymin', parse=float) - 1
         box[0, 2] = _findNode(bndbox, 'xmax', 'bndbox.xmax', parse=float) - 1
         box[0, 3] = _findNode(bndbox, 'ymax', 'bndbox.ymax', parse=float) - 1
-
+        box[0, 3] *= self.fy
+        box[0, 1] *= self.fy
+        box[0, 0] *= self.fx
+        box[0, 2] *= self.fx
         return box
 
     def __parse_annotations(self, xml_root, img):
@@ -126,7 +150,8 @@ class PascalVocGenerator(Generator):
             try:
                 box = self.__parse_annotation(element)
             except ValueError as e:
-                print('could not parse object #{}: {}'.format(i, e))
+                pass
+                #print('could not parse object #{}: {}'.format(i, e))
                 #raise_from(ValueError('could not parse object #{}: {}'.format(i, e)), None)
             else:
                 boxes = np.append(boxes, box, axis=0)

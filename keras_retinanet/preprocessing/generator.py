@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import cv2
 import numpy as np
 import random
 import threading
@@ -137,9 +137,13 @@ class Generator(object):
 
         # randomly transform image and annotations
         image, annotations = self.random_transform_group_entry(image, annotations)
-
+        #image = cv2.resize(image, None, fx=1, fy=0.5)
+        #annotations[:, 3] *= 0.5
+        #annotations[:, 1] *= 0.5
         # resize image
         image, image_scale = self.resize_image(image)
+        #print(annotations)
+
 
         # apply resizing to annotations too
         annotations[:, :4] *= image_scale
@@ -150,7 +154,7 @@ class Generator(object):
         for index, (image, annotations) in enumerate(zip(image_group, annotations_group)):
             # preprocess a single group entry
             image, annotations = self.preprocess_group_entry(image, annotations)
-
+            #print ('in preprocess group')
             # copy processed data back to group
             image_group[index]       = image
             annotations_group[index] = annotations

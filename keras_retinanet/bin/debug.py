@@ -148,14 +148,15 @@ def run(generator, args):
             image, annotations = generator.random_transform_group_entry(image, annotations)
 
         # resize the image and annotations
-        if args.resize:
-            image, image_scale = generator.resize_image(image)
-            annotations[:, :4] *= image_scale
+        #if args.resize:
+        image, image_scale = generator.resize_image(image)
+        print(image.shape)
+        annotations[:, :4] *= image_scale
 
         # draw anchors on the image
         if args.anchors:
             labels, _, anchors = generator.compute_anchor_targets(image.shape, annotations, generator.num_classes())
-            draw_boxes(image, anchors[np.max(labels, axis=1) == 1], (255, 255, 0), thickness=1)
+            draw_boxes(image, anchors[np.max(labels, axis=1) == 1], (255, 255, 0), thickness=2)
 
         # draw annotations on the image
         if args.annotations:
@@ -184,7 +185,7 @@ def main(args=None):
 
     # create the display window
     cv2.namedWindow('Image', cv2.WINDOW_NORMAL)
-
+    cv2.resizeWindow('Image',(1000,1000))
     if args.loop:
         while run(generator, args):
             pass

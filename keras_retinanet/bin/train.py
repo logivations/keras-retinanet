@@ -205,7 +205,9 @@ def create_generators(args):
             transform_generator=transform_generator,
             batch_size=args.batch_size,
             image_min_side=args.image_min_side,
-            image_max_side=args.image_max_side
+            image_max_side=args.image_max_side,
+            scale_x=args.scalex,
+            scale_y=args.scaley
         )
 
         validation_generator = PascalVocGenerator(
@@ -213,7 +215,9 @@ def create_generators(args):
             'test',
             batch_size=args.batch_size,
             image_min_side=args.image_min_side,
-            image_max_side=args.image_max_side
+            image_max_side=args.image_max_side,
+            scale_y=args.scaley,
+            scale_x=args.scalex
         )
     elif args.dataset_type == 'csv':
         train_generator = CSVGenerator(
@@ -342,7 +346,7 @@ def parse_args(args):
     csv_parser.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--snapshot',          help='Resume training from a snapshot.')
+    group.add_argument('--snapshot',          help='Resume training from a snapshot.')#,default='./snapshots/resnet50_pascal_08.h5')
     group.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights. This is the default behaviour.', action='store_const', const=True, default='/snapshots/1/resnet50_pascal_30.h5')
     group.add_argument('--weights',           help='Initialize the model with weights from a file.')
     group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
@@ -353,15 +357,17 @@ def parse_args(args):
     parser.add_argument('--multi-gpu',       help='Number of GPUs to use for parallel processing.', type=int, default=0)
     parser.add_argument('--multi-gpu-force', help='Extra flag needed to enable (experimental) multi-gpu support.', action='store_true')
     parser.add_argument('--epochs',          help='Number of epochs to train.', type=int, default=50)
-    parser.add_argument('--steps',           help='Number of steps per epoch.', type=int, default=10000)
+    parser.add_argument('--steps',           help='Number of steps per epoch.', type=int, default=100)
     parser.add_argument('--snapshot-path',   help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
     parser.add_argument('--tensorboard-dir', help='Log directory for Tensorboard output', default='./logs')
     parser.add_argument('--no-snapshots',    help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation',   help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--freeze-backbone', help='Freeze training of backbone layers.', action='store_true')
     parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
-    parser.add_argument('--image-min-side', help='Rescale the image so the smallest side is min_side.', type=int, default=800)
-    parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
+    parser.add_argument('--image-min-side', help='Rescale the image so the smallest side is min_side.keeps aspect ratio', type=int, default=800)
+    parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.keeps aspect ratio', type=int, default=1333)
+    parser.add_argument('--scalex', help='Rescale the image x.', type=int, default=1)
+    parser.add_argument('--scaley', help='Rescale the image y.', type=int, default=0.2)
 
     return check_args(parser.parse_args(args))
 

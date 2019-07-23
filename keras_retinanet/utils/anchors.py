@@ -16,7 +16,7 @@ limitations under the License.
 
 import numpy as np
 
-
+import keras
 def anchor_targets_bbox(
     image_shape,
     annotations,
@@ -123,7 +123,8 @@ def anchors_for_shape(
         ratios = np.array([0.5, 1, 2])
     if scales is None:
         scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
-
+    #ratios = np.array([5, 5, 5], keras.backend.floatx())
+    #scales = np.array([1, 1, 1], keras.backend.floatx())
     if shapes_callback is None:
         shapes_callback = guess_shapes
     image_shapes = shapes_callback(image_shape, pyramid_levels)
@@ -172,7 +173,8 @@ def generate_anchors(base_size=16, ratios=None, scales=None):
 
     if scales is None:
         scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
-
+    #ratios = np.array([5, 5, 5], keras.backend.floatx())
+    #scales = np.array([1, 1, 1], keras.backend.floatx())
     num_anchors = len(ratios) * len(scales)
 
     # initialize output anchors

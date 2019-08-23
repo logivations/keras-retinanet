@@ -50,6 +50,9 @@ voc_classes = {
     'tvmonitor'   : 19
 }
 
+voc_classes = {
+    'paperbags'   : 0,
+    'boxes'     : 1}
 
 def _findNode(parent, name, debug_name=None, parse=None):
     if debug_name is None:
@@ -80,6 +83,9 @@ class PascalVocGenerator(Generator):
         image_extension='.jpg',
         skip_truncated=False,
         skip_difficult=False,
+        use_cache=True,
+        scale_x=1,
+        scale_y=1,
         **kwargs
     ):
         """ Initialize a Pascal VOC data generator.
@@ -91,12 +97,16 @@ class PascalVocGenerator(Generator):
         self.data_dir             = data_dir
         self.set_name             = set_name
         self.classes              = classes
-        self.image_names          = [l.strip().split(None, 1)[0] for l in open(os.path.join(data_dir, 'ImageSets', 'Main', set_name + '.txt')).readlines()]
+        self.image_names          = [l.strip().split(None, 1)[0] for l in open(os.path.join(data_dir, 'ImageSets', set_name + '.txt')).readlines()]
         self.image_extension      = image_extension
         self.skip_truncated       = skip_truncated
         self.skip_difficult       = skip_difficult
-
+        self.use_cache = use_cache
+        self.fx=scale_x
+        self.fy=scale_y
         self.labels = {}
+
+        self.img_cache = {}
         for key, value in self.classes.items():
             self.labels[value] = key
 
@@ -143,13 +153,22 @@ class PascalVocGenerator(Generator):
         """ Load an image at the image_index.
         """
         path = os.path.join(self.data_dir, 'JPEGImages', self.image_names[image_index] + self.image_extension)
-        return read_image_bgr(path)
+        if self.use_cache:
+            if path not in self.img_cache:
+                img = read_image_bgr(path, self.set_name,fx = self.fx, fy=self.fy)
+                #print(len(img))
+                self.img_cache[path] = img
+            else:
+                img = self.img_cache[path]
+        else:
+            img = read_image_bgr(path, self.set_name, fx=self.fx, fy=self.fy)
+        return img
 
     def __parse_annotation(self, element):
         """ Parse an annotation given an XML element.
         """
-        truncated = _findNode(element, 'truncated', parse=int)
-        difficult = _findNode(element, 'difficult', parse=int)
+        truncated = None#_findNode(element, 'truncated', parse=int)
+        difficult = None#_findNode(element, 'difficult', parse=int)
 
         class_name = _findNode(element, 'name').text
         if class_name not in self.classes:
@@ -163,6 +182,14 @@ class PascalVocGenerator(Generator):
         box[1] = _findNode(bndbox, 'ymin', 'bndbox.ymin', parse=float) - 1
         box[2] = _findNode(bndbox, 'xmax', 'bndbox.xmax', parse=float) - 1
         box[3] = _findNode(bndbox, 'ymax', 'bndbox.ymax', parse=float) - 1
+
+        if class_name=='paperbags':
+            box[1] = box[3]-250
+            #box[0, 4] = self.name_to_label('boxes')
+        box[3] *= self.fy
+        box[1] *= self.fy
+        box[0] *= self.fx
+        box[2] *= self.fx
 
         return truncated, difficult, box, label
 

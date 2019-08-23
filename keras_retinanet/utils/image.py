@@ -21,7 +21,12 @@ from PIL import Image
 
 from .transform import change_transform_origin
 
+def read_image_bgr(path, set_name='test',fx=1,fy=1):
 
+    image = np.asarray(Image.open(path).convert('RGB'))
+    image = cv2.resize(image, None, fx=fx, fy=fy)
+    return image[:, :, ::-1].copy()
+'''
 def read_image_bgr(path):
     """ Read an image in BGR format.
 
@@ -31,7 +36,7 @@ def read_image_bgr(path):
     # We deliberately don't use cv2.imread here, since it gives no feedback on errors while reading the image.
     image = np.asarray(Image.open(path).convert('RGB'))
     return image[:, :, ::-1].copy()
-
+'''
 
 def preprocess_image(x, mode='caffe'):
     """ Preprocess an image by subtracting the ImageNet mean.

@@ -29,7 +29,8 @@ class AnchorParameters:
         ratios  : List of ratios to use per location in a feature map.
         scales  : List of scales to use per location in a feature map.
     """
-    def __init__(self, sizes, strides, ratios, scales):
+    def __init__(self, sizes, strides, ratios, scales, nms_threshold):
+        self.nms_threshold = nms_threshold
         self.sizes   = sizes
         self.strides = strides
         self.ratios  = ratios
@@ -47,6 +48,7 @@ AnchorParameters.default = AnchorParameters(
     strides = [8, 16, 32, 64, 128],
     ratios  = np.array([0.5, 1, 2], keras.backend.floatx()),
     scales  = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)], keras.backend.floatx()),
+    nms_threshold = 0.5,
 )
 
 

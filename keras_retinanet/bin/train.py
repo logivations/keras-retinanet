@@ -24,6 +24,7 @@ import warnings
 import keras
 import keras.preprocessing.image
 import tensorflow as tf
+import numpy as np
 
 # Allow relative imports when being executed as script.
 if __name__ == "__main__" and __package__ is None:
@@ -42,7 +43,7 @@ from ..preprocessing.csv_generator import CSVGenerator
 from ..preprocessing.kitti import KittiGenerator
 from ..preprocessing.open_images import OpenImagesGenerator
 from ..preprocessing.pascal_voc import PascalVocGenerator
-from ..utils.anchors import make_shapes_callback
+from ..utils.anchors import make_shapes_callback, AnchorParameters
 from ..utils.config import read_config_file, parse_anchor_parameters
 from ..utils.keras_version import check_keras_version
 from ..utils.model import freeze as freeze_model
@@ -268,9 +269,11 @@ def create_generators(args, preprocess_image):
     elif args.dataset_type == 'pascal':
         train_generator = PascalVocGenerator(
             args.pascal_path,
-            'trainval',
+            'train',
             transform_generator=transform_generator,
             visual_effect_generator=visual_effect_generator,
+            scale_y=args.scaley,
+            scale_x=args.scalex,
             **common_args
         )
 
@@ -278,6 +281,8 @@ def create_generators(args, preprocess_image):
             args.pascal_path,
             'test',
             shuffle_groups=False,
+            scale_y=args.scaley,
+            scale_x=args.scalex,
             **common_args
         )
     elif args.dataset_type == 'csv':
@@ -377,32 +382,35 @@ def parse_args(args):
     """ Parse the arguments.
     """
     parser     = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
-    subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
-    subparsers.required = True
-
-    coco_parser = subparsers.add_parser('coco')
-    coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
-
-    pascal_parser = subparsers.add_parser('pascal')
-    pascal_parser.add_argument('pascal_path', help='Path to dataset directory (ie. /tmp/VOCdevkit).')
-
-    kitti_parser = subparsers.add_parser('kitti')
-    kitti_parser.add_argument('kitti_path', help='Path to dataset directory (ie. /tmp/kitti).')
+    subparsers = parser.add_argument('--dataset_type', help='Arguments for specific dataset types.', dest='dataset_type', default='pascal')
+    parser.add_argument('--pascal_path', dest='pascal_path', help='Path to dataset directory (ie. /tmp/VOCdevkit).')
+    
+    # subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
+    # subparsers.required = True
+    #
+    # coco_parser = subparsers.add_parser('coco')
+    # coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
+    #
+    # pascal_parser = subparsers.add_parser('pascal')
+    # pascal_parser.add_argument('pascal_path', help='Path to dataset directory (ie. /tmp/VOCdevkit).')
+    #
+    # kitti_parser = subparsers.add_parser('kitti')
+    # kitti_parser.add_argument('kitti_path', help='Path to dataset directory (ie. /tmp/kitti).')
 
     def csv_list(string):
         return string.split(',')
 
-    oid_parser = subparsers.add_parser('oid')
-    oid_parser.add_argument('main_dir', help='Path to dataset directory.')
-    oid_parser.add_argument('--version',  help='The current dataset version is v4.', default='v4')
-    oid_parser.add_argument('--labels-filter',  help='A list of labels to filter.', type=csv_list, default=None)
-    oid_parser.add_argument('--annotation-cache-dir', help='Path to store annotation cache.', default='.')
-    oid_parser.add_argument('--parent-label', help='Use the hierarchy children of this label.', default=None)
-
-    csv_parser = subparsers.add_parser('csv')
-    csv_parser.add_argument('annotations', help='Path to CSV file containing annotations for training.')
-    csv_parser.add_argument('classes', help='Path to a CSV file containing class label mapping.')
-    csv_parser.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
+    # oid_parser = subparsers.add_parser('oid')
+    # oid_parser.add_argument('main_dir', help='Path to dataset directory.')
+    # oid_parser.add_argument('--version',  help='The current dataset version is v4.', default='v4')
+    # oid_parser.add_argument('--labels-filter',  help='A list of labels to filter.', type=csv_list, default=None)
+    # oid_parser.add_argument('--annotation-cache-dir', help='Path to store annotation cache.', default='.')
+    # oid_parser.add_argument('--parent-label', help='Use the hierarchy children of this label.', default=None)
+    #
+    # csv_parser = subparsers.add_parser('csv')
+    # csv_parser.add_argument('annotations', help='Path to CSV file containing annotations for training.')
+    # csv_parser.add_argument('classes', help='Path to a CSV file containing class label mapping.')
+    # csv_parser.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--snapshot',          help='Resume training from a snapshot.')
@@ -416,24 +424,35 @@ def parse_args(args):
     parser.add_argument('--multi-gpu',        help='Number of GPUs to use for parallel processing.', type=int, default=0)
     parser.add_argument('--multi-gpu-force',  help='Extra flag needed to enable (experimental) multi-gpu support.', action='store_true')
     parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=50)
-    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=10000)
-    parser.add_argument('--lr',               help='Learning rate.', type=float, default=1e-5)
+    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=200)
+    parser.add_argument('--lr',               help='Learning rate.', type=float, default=1e-4)
     parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
     parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs')
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true')
     parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
-    parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=800)
-    parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
-    parser.add_argument('--config',           help='Path to a configuration parameters .ini file.')
+    parser.add_argument('--config',           help='Path to a configuration parameters .ini file.',default='/workspace/retinanetnew/keras-retinanet/keras_retinanet/bin/config.ini')
     parser.add_argument('--weighted-average', help='Compute the mAP using the weighted average of precisions among classes.', action='store_true')
     parser.add_argument('--compute-val-loss', help='Compute validation loss during training', dest='compute_val_loss', action='store_true')
+    parser.add_argument('--bypassconfig', help='Compute validation loss during training', dest='bypassconfig', action='store_true')
+    parser.add_argument('--ratios', help='Compute validation loss during training', dest='ratios', default='0.5 1 2 4 6 8')
+    parser.add_argument('--sizes', help='Compute validation loss during training', dest='sizes', default='32 64 128 256 512')
+    parser.add_argument('--strides', help='Compute validation loss during training', dest='strides', default='8 16 32 64 128')
+    parser.add_argument('--scales', help='Compute validation loss during training', dest='scales', default='1 1.2 1.6')
+    parser.add_argument('--nms-threshold', help='Compute validation loss during training', dest='nms_threshold', default='0.2')
+    parser.add_argument('--taskid', help='runnn', dest='taskid', default='0')
+
+
 
     # Fit generator arguments
     parser.add_argument('--multiprocessing',  help='Use multiprocessing in fit_generator.', action='store_true')
     parser.add_argument('--workers',          help='Number of generator workers.', type=int, default=1)
     parser.add_argument('--max-queue-size',   help='Queue length for multiprocessing workers in fit_generator.', type=int, default=10)
+    parser.add_argument('--image-min-side', help='Rescale the image so the smallest side is min_side.keeps aspect ratio', type=int, default=800)
+    parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.keeps aspect ratio', type=int, default=2666)
+    parser.add_argument('--scalex', help='Rescale the image x.', type=float, default=1)
+    parser.add_argument('--scaley', help='Rescale the image y.', type=float, default=0.2)
 
     return check_args(parser.parse_args(args))
 
@@ -458,6 +477,23 @@ def main(args=None):
     # optionally load config parameters
     if args.config:
         args.config = read_config_file(args.config)
+    else:
+        args.config['anchor_parameters']['ratios'] = '0.5 1 2 4 6 8'
+        args.config['anchor_parameters']['scales'] = '1 1.2 1.6'
+        args.config['anchor_parameters']['sizes'] = '32 64 128 256 512'
+        args.config['anchor_parameters']['strides'] = '8 16 32 64 128'
+        args.config['anchor_parameters']['nms_threshold'] = '0.2'
+
+    if args.ratios:
+        args.config['anchor_parameters']['ratios'] = args.ratios
+    if args.scales:
+        args.config['anchor_parameters']['scales'] = args.scales
+    if args.sizes:
+        args.config['anchor_parameters']['sizes'] = args.sizes
+    if args.strides:
+        args.config['anchor_parameters']['strides'] = args.strides
+    if args.nms_threshold:
+        args.config['anchor_parameters']['nms_threshold'] = args.nms_threshold
 
     # create the generators
     train_generator, validation_generator = create_generators(args, backbone.preprocess_image)

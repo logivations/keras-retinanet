@@ -55,7 +55,7 @@ def _compute_ap(recall, precision):
     return ap
 
 
-def _get_detections(generator, model, score_threshold=0.05, max_detections=100, save_path=None):
+def _get_detections(generator, model, score_threshold=0.05, max_detections=100, save_path=None, perclass_score=None):
     """ Get the detections from the model using the generator.
 
     The result is a list of lists such that the size is:
@@ -67,6 +67,7 @@ def _get_detections(generator, model, score_threshold=0.05, max_detections=100, 
         score_threshold : The score confidence threshold to use.
         max_detections  : The maximum number of detections to use per image.
         save_path       : The path to save the images with visualized detections to.
+        perclass_score : filter classes by there indivisual score
     # Returns
         A list of lists containing the detections for each image in the generator.
     """
@@ -150,7 +151,9 @@ def evaluate(
     iou_threshold=0.5,
     score_threshold=0.05,
     max_detections=100,
-    save_path=None
+    save_path=None,
+    perclass_score= None
+
 ):
     """ Evaluate a given dataset using a given model.
 
@@ -165,7 +168,7 @@ def evaluate(
         A dict mapping class names to mAP scores.
     """
     # gather all detections and annotations
-    all_detections     = _get_detections(generator, model, score_threshold=score_threshold, max_detections=max_detections, save_path=save_path)
+    all_detections     = _get_detections(generator, model, score_threshold=score_threshold, max_detections=max_detections, save_path=save_path, perclass_score = perclass_score)
     all_annotations    = _get_annotations(generator)
     average_precisions = {}
 

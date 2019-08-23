@@ -43,5 +43,6 @@ def parse_anchor_parameters(config):
     scales  = np.array(list(map(float, config['anchor_parameters']['scales'].split(' '))), keras.backend.floatx())
     sizes   = list(map(int, config['anchor_parameters']['sizes'].split(' ')))
     strides = list(map(int, config['anchor_parameters']['strides'].split(' ')))
+    nms_threshold = float(config['anchor_parameters']['nms_threshold'])
 
-    return AnchorParameters(sizes, strides, ratios, scales)
+    return AnchorParameters(sizes, strides, ratios, scales, nms_threshold)

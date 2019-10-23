@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import random
 
 from ..preprocessing.generator import Generator
 from ..utils.image import read_image_bgr
@@ -98,6 +99,8 @@ class PascalVocGenerator(Generator):
         self.set_name             = set_name
         self.classes              = classes
         self.image_names          = [l.strip().split(None, 1)[0] for l in open(os.path.join(data_dir, 'ImageSets', set_name + '.txt')).readlines()]
+        print(os.path.join(data_dir, 'ImageSets', set_name + '.txt'))
+        random.shuffle(self.image_names)
         self.image_extension      = image_extension
         self.skip_truncated       = skip_truncated
         self.skip_difficult       = skip_difficult
@@ -171,11 +174,13 @@ class PascalVocGenerator(Generator):
         difficult = None#_findNode(element, 'difficult', parse=int)
 
         class_name = _findNode(element, 'name').text
+        if class_name == None:print('null classname')
         if class_name not in self.classes:
             raise ValueError('class name \'{}\' not found in classes: {}'.format(class_name, list(self.classes.keys())))
 
         box = np.zeros((4,))
         label = self.name_to_label(class_name)
+        #label = self.name_to_label('boxes')
 
         bndbox    = _findNode(element, 'bndbox')
         box[0] = _findNode(bndbox, 'xmin', 'bndbox.xmin', parse=float) - 1
@@ -185,6 +190,8 @@ class PascalVocGenerator(Generator):
 
         if class_name=='paperbags':
             box[1] = box[3]-250
+
+        #box[1] = box[3] - 250
             #box[0, 4] = self.name_to_label('boxes')
         box[3] *= self.fy
         box[1] *= self.fy
@@ -224,3 +231,4 @@ class PascalVocGenerator(Generator):
             raise_from(ValueError('invalid annotations file: {}: {}'.format(filename, e)), None)
         except ValueError as e:
             raise_from(ValueError('invalid annotations file: {}: {}'.format(filename, e)), None)
+

@@ -418,13 +418,13 @@ def parse_args(args):
     group.add_argument('--weights',           help='Initialize the model with weights from a file.')
     group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
 
-    parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='resnet50', type=str)
-    parser.add_argument('--batch-size',       help='Size of the batches.', default=1, type=int)
+    parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='resnet152', type=str)
+    parser.add_argument('--batch-size',       help='Size of the batches.', default=2, type=int)
     parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).')
     parser.add_argument('--multi-gpu',        help='Number of GPUs to use for parallel processing.', type=int, default=0)
     parser.add_argument('--multi-gpu-force',  help='Extra flag needed to enable (experimental) multi-gpu support.', action='store_true')
-    parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=50)
-    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=200)
+    parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=32)
+    parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=500)
     parser.add_argument('--lr',               help='Learning rate.', type=float, default=1e-4)
     parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
     parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs')
@@ -436,11 +436,11 @@ def parse_args(args):
     parser.add_argument('--weighted-average', help='Compute the mAP using the weighted average of precisions among classes.', action='store_true')
     parser.add_argument('--compute-val-loss', help='Compute validation loss during training', dest='compute_val_loss', action='store_true')
     parser.add_argument('--bypassconfig', help='Compute validation loss during training', dest='bypassconfig', action='store_true')
-    parser.add_argument('--ratios', help='Compute validation loss during training', dest='ratios', default='0.5 1 2 4 6 8')
-    parser.add_argument('--sizes', help='Compute validation loss during training', dest='sizes', default='32 64 128 256 512')
-    parser.add_argument('--strides', help='Compute validation loss during training', dest='strides', default='8 16 32 64 128')
-    parser.add_argument('--scales', help='Compute validation loss during training', dest='scales', default='1 1.2 1.6')
-    parser.add_argument('--nms-threshold', help='Compute validation loss during training', dest='nms_threshold', default='0.2')
+    parser.add_argument('--ratios', help='Compute validation loss during training', dest='ratios')
+    parser.add_argument('--sizes', help='Compute validation loss during training', dest='sizes')
+    parser.add_argument('--strides', help='Compute validation loss during training', dest='strides')
+    parser.add_argument('--scales', help='Compute validation loss during training', dest='scales')
+    parser.add_argument('--nms-threshold', help='Compute validation loss during training', dest='nms_threshold')
     parser.add_argument('--taskid', help='runnn', dest='taskid', default='0')
 
 
@@ -523,7 +523,7 @@ def main(args=None):
             lr=args.lr,
             config=args.config
         )
-
+    #earlystop = keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=0, verbose=0, mode='auto', baseline=None, restore_best_weights=False)
     # print model summary
     print(model.summary())
 
@@ -544,7 +544,7 @@ def main(args=None):
 
     if not args.compute_val_loss:
         validation_generator = None
-
+    print(args.ratios,args.scales,args.scaley,args.nms_threshold,args.strides,args.lr)
     # start training
     return training_model.fit_generator(
         generator=train_generator,

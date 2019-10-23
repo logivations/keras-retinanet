@@ -88,6 +88,8 @@ def create_generator(args):
             visual_effect_generator=visual_effect_generator,
             image_min_side=args.image_min_side,
             image_max_side=args.image_max_side,
+            scale_y=args.scaley,
+            scale_x=args.scalex,
             config=args.config
         )
     elif args.dataset_type == 'csv':
@@ -170,9 +172,10 @@ def parse_args(args):
     parser.add_argument('--annotations', help='Show annotations on the image. Green annotations have anchors, red annotations don\'t and therefore don\'t contribute to training.', action='store_true')
     parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
     parser.add_argument('--image-min-side', help='Rescale the image so the smallest side is min_side.', type=int, default=800)
-    parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
-    parser.add_argument('--config', help='Path to a configuration parameters .ini file.')
-
+    parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.', type=int, default=2666)
+    parser.add_argument('--config', help='Path to a configuration parameters .ini file.',default='/workspace/retinanetnew/keras-retinanet/keras_retinanet/bin/config.ini')
+    parser.add_argument('--scalex', help='Rescale the image x.', type=float, default=1)
+    parser.add_argument('--scaley', help='Rescale the image y.', type=float, default=0.2)
     return parser.parse_args(args)
 
 

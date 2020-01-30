@@ -29,11 +29,11 @@ class Anchors(keras.layers.Layer):
         self.scales = scales
 
         if ratios is None:
-            self.ratios  = np.array([0.5, 1, 2], keras.backend.floatx()),
+            self.ratios  = np.array([0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5], keras.backend.floatx()),
         elif isinstance(ratios, list):
             self.ratios  = np.array(ratios)
         if scales is None:
-            self.scales  = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)], keras.backend.floatx()),
+            self.scales  = np.array([1, 1.2, 1.6, 0.8], keras.backend.floatx()),
         elif isinstance(scales, list):
             self.scales  = np.array(scales)
         #self.ratios = np.array([5, 5, 5], keras.backend.floatx())

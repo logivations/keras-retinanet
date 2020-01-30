@@ -120,9 +120,9 @@ def anchors_for_shape(
     if sizes is None:
         sizes = [2 ** (x + 2) for x in pyramid_levels]
     if ratios is None:
-        ratios = np.array([0.5, 1, 2])
+        ratios = np.array([0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5])
     if scales is None:
-        scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+        scales = np.array([1, 1.2, 1.6, 0.8])
     #ratios = np.array([5, 5, 5], keras.backend.floatx())
     #scales = np.array([1, 1, 1], keras.backend.floatx())
     if shapes_callback is None:
@@ -169,10 +169,10 @@ def generate_anchors(base_size=16, ratios=None, scales=None):
     """
 
     if ratios is None:
-        ratios = np.array([0.5, 1, 2])
+        ratios = np.array([0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5])
 
     if scales is None:
-        scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+        scales = np.array([1, 1.2, 1.6, 0.8])
     #ratios = np.array([5, 5, 5], keras.backend.floatx())
     #scales = np.array([1, 1, 1], keras.backend.floatx())
     num_anchors = len(ratios) * len(scales)

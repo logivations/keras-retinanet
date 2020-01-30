@@ -18,7 +18,7 @@ import keras
 from .. import backend
 
 
-def filter_detections(boxes, classification, other=[], nms=False, score_threshold=0.05, max_detections=300, nms_threshold=0.5):
+def filter_detections(boxes, classification, other=[], nms=False, score_threshold=0.05, max_detections=300, nms_threshold=0.2):
     """ Filter detections using the boxes and classification values.
 
     Args

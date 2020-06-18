@@ -42,7 +42,7 @@ class CocoEval(keras.callbacks.Callback):
         coco_eval_stats = evaluate_coco(self.generator, self.model, self.threshold)
         if coco_eval_stats is not None and self.tensorboard is not None and self.tensorboard.writer is not None:
             import tensorflow as tf
-            summary = tf.Summary()
+            summary = tf.compat.v1.Summary()
             for index, result in enumerate(coco_eval_stats):
                 summary_value = summary.value.add()
                 summary_value.simple_value = result

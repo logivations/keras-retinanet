@@ -51,7 +51,7 @@ def main(args=None):
     model = models.load_model(args.model_in, convert=True, backbone_name=args.backbone, nms=args.nms)
 
     # save model
-    model.save(args.model_out)
+    model.save(args.model_out, save_format='h5')
 
 
 if __name__ == '__main__':

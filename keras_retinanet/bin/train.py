@@ -23,7 +23,7 @@ import sys
 import warnings
 
 import keras
-print keras.__version__
+print(keras.__version__)
 import keras.preprocessing.image
 from keras.utils import multi_gpu_model
 import tensorflow as tf
@@ -63,9 +63,9 @@ def makedirs(path):
 
 
 def get_session():
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
-    return tf.Session(config=config)
+    return tf.compat.v1.Session(config=config)
 
 
 def model_with_weights(model, weights, skip_mismatch):

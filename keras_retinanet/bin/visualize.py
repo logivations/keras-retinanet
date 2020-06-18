@@ -16,9 +16,9 @@ import time
 import tensorflow as tf
 
 def get_session():
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
-    return tf.Session(config=config)
+    return tf.compat.v1.Session(config=config)
 
 
 keras.backend.tensorflow_backend.set_session(get_session())
@@ -58,7 +58,7 @@ for i in os.listdir(relative_path_to_imgs):
     # visualize detections
     for box, score, label in zip(boxes[0], scores[0], labels[0]):
         # scores are sorted so we can break
-        print score
+        print(score)
         if score < 0.05:
             break
         color = label_color(label)
